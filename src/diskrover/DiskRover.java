@@ -1,5 +1,5 @@
-/* DiskRover scans a storage drive and builds a map of files by file size.
-
+/* DiskRover, Kristofer Christakos, Jan 2017
+ * Scans a storage drive and builds an interactive map of files by file size.
  */
 package diskrover;
 
@@ -50,6 +50,9 @@ public class DiskRover extends javax.swing.JFrame {
         showFreeSpaceButton = new javax.swing.JToggleButton();
         zoomFullButton = new javax.swing.JButton();
         zoomOutButton = new javax.swing.JButton();
+        labelsPanel = new javax.swing.JPanel();
+        hoverPathLabel = new javax.swing.JLabel();
+        hoverSizeLabel = new javax.swing.JLabel();
         layeredPane = new javax.swing.JLayeredPane();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
@@ -119,6 +122,41 @@ public class DiskRover extends javax.swing.JFrame {
         gridBagConstraints.weightx = 1.0;
         getContentPane().add(buttonsPanel, gridBagConstraints);
 
+        hoverPathLabel.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
+        hoverPathLabel.setText("Select a drive.");
+        hoverPathLabel.setFocusable(false);
+
+        hoverSizeLabel.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
+        hoverSizeLabel.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
+
+        javax.swing.GroupLayout labelsPanelLayout = new javax.swing.GroupLayout(labelsPanel);
+        labelsPanel.setLayout(labelsPanelLayout);
+        labelsPanelLayout.setHorizontalGroup(
+            labelsPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(labelsPanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(hoverPathLabel)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 469, Short.MAX_VALUE)
+                .addComponent(hoverSizeLabel)
+                .addContainerGap())
+        );
+        labelsPanelLayout.setVerticalGroup(
+            labelsPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, labelsPanelLayout.createSequentialGroup()
+                .addGap(0, 0, Short.MAX_VALUE)
+                .addGroup(labelsPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(hoverPathLabel)
+                    .addComponent(hoverSizeLabel)))
+        );
+
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 1;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+        gridBagConstraints.anchor = java.awt.GridBagConstraints.FIRST_LINE_START;
+        gridBagConstraints.weightx = 1.0;
+        getContentPane().add(labelsPanel, gridBagConstraints);
+
         layeredPane.addComponentListener(new java.awt.event.ComponentAdapter() {
             public void componentResized(java.awt.event.ComponentEvent evt) {
                 layeredPaneComponentResized(evt);
@@ -129,16 +167,16 @@ public class DiskRover extends javax.swing.JFrame {
         layeredPane.setLayout(layeredPaneLayout);
         layeredPaneLayout.setHorizontalGroup(
             layeredPaneLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 523, Short.MAX_VALUE)
+            .addGap(0, 558, Short.MAX_VALUE)
         );
         layeredPaneLayout.setVerticalGroup(
             layeredPaneLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 294, Short.MAX_VALUE)
+            .addGap(0, 280, Short.MAX_VALUE)
         );
 
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 1;
+        gridBagConstraints.gridy = 2;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         gridBagConstraints.anchor = java.awt.GridBagConstraints.FIRST_LINE_START;
         gridBagConstraints.weightx = 1.0;
@@ -366,6 +404,13 @@ public class DiskRover extends javax.swing.JFrame {
                     public void mouseEntered(java.awt.event.MouseEvent evt) {
                         rectangle.setBorderWhite();
                         rectangle.setBackgroundToLightColor(layer);
+                        hoverPathLabel.setText(rectangle.file.path);
+                        long rectSize = rectangle.file.getSize();
+                        String fileSizeText = FileSizeConverter.
+                                convertFileSize(rectSize);
+                        String filePercentText = FileSizeConverter.
+                                calculateSizePercent(rectSize, parentZoomStack.peek().getSize());
+                        hoverSizeLabel.setText(fileSizeText + " " + filePercentText);
                     }
                     public void mouseExited(java.awt.event.MouseEvent evt) {
                         rectangle.setBorderBlack();
@@ -399,6 +444,13 @@ public class DiskRover extends javax.swing.JFrame {
                     public void mouseEntered(java.awt.event.MouseEvent evt) {
                         rectangle.setBorderWhite();
                         rectangle.setBackgroundToLightGray();
+                        hoverPathLabel.setText(rectangle.file.name);
+                        long rectSize = rectangle.file.getSize();
+                        String fileSizeText = FileSizeConverter.
+                                convertFileSize(rectSize);
+                        String filePercentText = FileSizeConverter.
+                                calculateSizePercent(rectSize, parentZoomStack.peek().getSize());
+                        hoverSizeLabel.setText(fileSizeText + " " + filePercentText);
                     }
                     public void mouseExited(java.awt.event.MouseEvent evt) {
                         rectangle.setBorderBlack();
@@ -534,6 +586,9 @@ public class DiskRover extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel buttonsPanel;
+    private javax.swing.JLabel hoverPathLabel;
+    private javax.swing.JLabel hoverSizeLabel;
+    private javax.swing.JPanel labelsPanel;
     private javax.swing.JLayeredPane layeredPane;
     private javax.swing.JButton reloadButton;
     private javax.swing.JButton selectDriveButton;
