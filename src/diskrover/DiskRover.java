@@ -53,6 +53,7 @@ public class DiskRover extends javax.swing.JFrame {
         layeredPane = new javax.swing.JLayeredPane();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setTitle("DiskRover");
         setPreferredSize(new java.awt.Dimension(1000, 650));
         setSize(new java.awt.Dimension(700, 500));
         getContentPane().setLayout(new java.awt.GridBagLayout());
@@ -165,6 +166,29 @@ public class DiskRover extends javax.swing.JFrame {
                 rootNames[0]);                  //initial selection value
         System.out.println("Drive selected: " + selectedDrive);
         
+        //Check if drive isn't a CD drive
+        if (selectedDrive != null) {
+            int driveIndex = -1;
+            for (int n = 0; n < rootNames.length; ++n) {
+                if (rootNames[n].equals(selectedDrive)) {
+                    driveIndex = n;
+                    break;
+                }
+            }
+            if (driveIndex == -1) {
+                System.out.println("Strange drive naming error. This should never happen.");
+                return;
+            }
+            if (availableRoots[driveIndex].getTotalSpace() == 0) {
+                //Must have selected a CD drive
+                JOptionPane.showMessageDialog(this, 
+                        "Error: Drive has 0 space. Select another drive.",
+                        "Drive Space Error",
+                        JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+        }
+        
         //enable and press the reload button
         if (selectedDrive != null) {
             RecordCounter.drivePath = selectedDrive;
@@ -187,6 +211,7 @@ public class DiskRover extends javax.swing.JFrame {
         the RecordCounter (set as static).
         */
         
+        //Preventing problems before this continues
         if (RecordCounter.drivePath == null) {
             System.out.println("Error, must select a drive first.");
             return;
@@ -479,7 +504,7 @@ public class DiskRover extends javax.swing.JFrame {
          */
         try {
             for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("System".equals(info.getName())) {
+                if ("Nimbus".equals(info.getName())) {
                     javax.swing.UIManager.setLookAndFeel(info.getClassName());
                     break;
                 }
