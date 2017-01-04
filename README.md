@@ -5,7 +5,7 @@ Visually see which folders and files are taking up the most space in your filesy
 Download link: 
 https://github.com/kriscode1/DiskRover/blob/master/dist/DiskRover.jar
 
-Inspired by SpaceMonger v1.4.0 by Sean Werkema. I'm so glad you wrote this. 
+Inspired by SpaceMonger v1.4.0 by Sean Werkema. I'm so glad you wrote it. 
 
 ![DiskRover Screenshot](screenshot.png)
 (image is low-res)
