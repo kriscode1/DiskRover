@@ -17,6 +17,7 @@ public class FileRecord implements Comparable<FileRecord> {
     final String path;
     final String name;
     private long size;
+    private String sizeForDisplay;
     final boolean isDirectory;
     List<FileRecord> children;
     final int depth;
@@ -30,6 +31,7 @@ public class FileRecord implements Comparable<FileRecord> {
         size = 0;
         this.depth = depth;
         children = null;
+        sizeForDisplay = null;
         
         //Get child files and folders
         if (fileInfo.isDirectory()) {
@@ -79,6 +81,11 @@ public class FileRecord implements Comparable<FileRecord> {
     }
     public long getSize() {
         return size;
+    }
+    public String getSizeForDisplay() {
+        if (sizeForDisplay != null) return sizeForDisplay;
+        sizeForDisplay = FileSizeConverter.convertFileSize(size);
+        return sizeForDisplay;
     }
     public void addFreeSpaceToSize(long freeSpace) {
         size += freeSpace;

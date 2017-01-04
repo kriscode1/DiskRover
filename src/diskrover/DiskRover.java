@@ -12,6 +12,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
+import java.util.Map;
+import java.util.HashMap;
 
 /**
  *
@@ -27,6 +29,7 @@ public class DiskRover extends javax.swing.JFrame {
     private final int RECTANGLE_TEXT_PADDING;
     private final int RECTANGLE_BORDER_PADDING = 3;
     private Stack<FileRecord> parentZoomStack;//stores zoom order for zooming out
+    private Map<String, String> currentZoomLabels;//stores text for better performance
     
     public DiskRover() {
         initComponents();
@@ -270,6 +273,7 @@ public class DiskRover extends javax.swing.JFrame {
         RecordCounter mappingDriveTask = new RecordCounter();
         mappingDriveTask.addPropertyChangeListener(
             new java.beans.PropertyChangeListener() {
+                @Override
                 public void propertyChange(java.beans.PropertyChangeEvent evt) {
                     int progress = mappingDriveTask.getProgress();
                     progressBar.setValue(progress);
@@ -285,6 +289,7 @@ public class DiskRover extends javax.swing.JFrame {
         JButton[] dialogBoxButtons = {GlobalGUI.cancelButton};
         dialogBoxButtons[0].addActionListener(new ActionListener() {
             //Overly complicated way to close the dialog box opened with showOptionDialog() below
+            @Override
             public void actionPerformed(ActionEvent e) {
                 java.awt.Window popupWindow = javax.swing.SwingUtilities.getWindowAncestor(dialogBoxButtons[0]);
                 if (popupWindow != null) {
@@ -334,6 +339,7 @@ public class DiskRover extends javax.swing.JFrame {
         if (layeredPane.getComponentCount() > 0) layeredPane.removeAll();
         parentZoomStack = new Stack();
         parentZoomStack.push(RecordCounter.drive.root);
+        currentZoomLabels = new HashMap();
         zoomOutButton.setEnabled(false);
         calculateRectangles(parentZoomStack.peek().children, 0, 0,
                 layeredPane.getWidth(), layeredPane.getHeight(), 0);
@@ -346,6 +352,7 @@ public class DiskRover extends javax.swing.JFrame {
         layeredPaneRectangles = new ArrayList();
         if (layeredPane.getComponentCount() > 0) layeredPane.removeAll();
         parentZoomStack.pop();
+        currentZoomLabels = new HashMap();
         if (parentZoomStack.peek() == RecordCounter.drive.root) {
             zoomOutButton.setEnabled(false);
         }
@@ -382,7 +389,7 @@ public class DiskRover extends javax.swing.JFrame {
         
         //First perform checks to end the recursion
         if ((width <= 0) || (height <= 0)) return;//Too small to draw borders
-        if (group.size() == 0) return;//This should never happen
+        if (group.isEmpty()) return;//This should never happen
         
         //innerWidth*innerHeight is the space for nested rectangles to go
         int innerWidth = width - (2 * RECTANGLE_BORDER_PADDING);
@@ -401,21 +408,33 @@ public class DiskRover extends javax.swing.JFrame {
             if (rectangle.file.path.length() != 0) {
                 //Add specialized mouse events for complete FileRecords
                 rectangle.label.addMouseListener(new java.awt.event.MouseAdapter() {
+                    @Override
                     public void mouseEntered(java.awt.event.MouseEvent evt) {
                         rectangle.setBorderWhite();
                         rectangle.setBackgroundToLightColor(layer);
-                        hoverPathLabel.setText(rectangle.file.path);
-                        long rectSize = rectangle.file.getSize();
-                        String fileSizeText = FileSizeConverter.
-                                convertFileSize(rectSize);
-                        String filePercentText = FileSizeConverter.
+                        String hoverPathLabelText = rectangle.file.path;
+                        hoverPathLabel.setText(hoverPathLabelText);
+                        String hoverSizeLabelText;
+                        if (currentZoomLabels.containsKey(hoverPathLabelText)) {
+                            //label text already calculated, reuse
+                            hoverSizeLabelText = currentZoomLabels.get(hoverPathLabelText);
+                        } else {
+                            //calculate the text and store in currentZoomLabels
+                            String fileSizeText = rectangle.file.getSizeForDisplay();
+                            long rectSize = rectangle.file.getSize();
+                            String filePercentText = FileSizeConverter.
                                 calculateSizePercent(rectSize, parentZoomStack.peek().getSize());
-                        hoverSizeLabel.setText(fileSizeText + " " + filePercentText);
+                            hoverSizeLabelText = fileSizeText + " " + filePercentText;
+                            currentZoomLabels.put(hoverPathLabelText, hoverSizeLabelText);
+                        }
+                        hoverSizeLabel.setText(hoverSizeLabelText);
                     }
+                    @Override
                     public void mouseExited(java.awt.event.MouseEvent evt) {
                         rectangle.setBorderBlack();
                         rectangle.setBackgroundToDarkColor(layer);
                     }
+                    @Override
                     public void mousePressed(java.awt.event.MouseEvent evt) {
                         if (rectangle.file.children != null) {
                             if (rectangle.file == RecordCounter.drive.root) {
@@ -425,6 +444,7 @@ public class DiskRover extends javax.swing.JFrame {
                                 zoomOutButton.setEnabled(true);
                             }
                             parentZoomStack.push(rectangle.file);
+                            currentZoomLabels = new HashMap();
                             layeredPaneRectangles = new ArrayList();
                             if (layeredPane.getComponentCount() > 0) layeredPane.removeAll();
                             calculateRectangles(parentZoomStack.peek().children, 
@@ -441,17 +461,28 @@ public class DiskRover extends javax.swing.JFrame {
                 rectangle.setBackgroundToDarkGray();
                 rectangle.setTextAlignmentToCenter();
                 rectangle.label.addMouseListener(new java.awt.event.MouseAdapter() {
+                    @Override
                     public void mouseEntered(java.awt.event.MouseEvent evt) {
                         rectangle.setBorderWhite();
                         rectangle.setBackgroundToLightGray();
-                        hoverPathLabel.setText(rectangle.file.name);
-                        long rectSize = rectangle.file.getSize();
-                        String fileSizeText = FileSizeConverter.
-                                convertFileSize(rectSize);
-                        String filePercentText = FileSizeConverter.
+                        String hoverPathLabelText = rectangle.file.name;
+                        hoverPathLabel.setText(hoverPathLabelText);
+                        String hoverSizeLabelText;
+                        if (currentZoomLabels.containsKey(hoverPathLabelText)) {
+                            //label text already calculated, reuse
+                            hoverSizeLabelText = currentZoomLabels.get(hoverPathLabelText);
+                        } else {
+                            //calculate the text and store in currentZoomLabels
+                            String fileSizeText = rectangle.file.getSizeForDisplay();
+                            long rectSize = rectangle.file.getSize();
+                            String filePercentText = FileSizeConverter.
                                 calculateSizePercent(rectSize, parentZoomStack.peek().getSize());
-                        hoverSizeLabel.setText(fileSizeText + " " + filePercentText);
+                            hoverSizeLabelText = fileSizeText + " " + filePercentText;
+                            currentZoomLabels.put(hoverPathLabelText, hoverSizeLabelText);
+                        }
+                        hoverSizeLabel.setText(hoverSizeLabelText);
                     }
+                    @Override
                     public void mouseExited(java.awt.event.MouseEvent evt) {
                         rectangle.setBorderBlack();
                         rectangle.setBackgroundToDarkGray();
@@ -578,6 +609,7 @@ public class DiskRover extends javax.swing.JFrame {
 
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
+            @Override
             public void run() {
                 new DiskRover().setVisible(true);
             }
