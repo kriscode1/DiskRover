@@ -6,6 +6,7 @@ package diskrover;
 import javax.swing.JOptionPane;
 import javax.swing.JLabel;
 import javax.swing.JButton;
+import javax.swing.ImageIcon;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.io.File;
@@ -31,14 +32,24 @@ public class DiskRover extends javax.swing.JFrame {
     private final int RECTANGLE_BORDER_PADDING = 3;
     private Stack<FileRecord> parentZoomStack;//stores zoom order for zooming out
     private Map<String, String> currentZoomLabels;//stores text for better performance
+    private final ImageIcon icon;
     
     public DiskRover() {
         initComponents();
+        
+        //Calculate RECTANGLE_TEXT_PADDING
         JLabel labelForFont = new JLabel("test");
         RECTANGLE_TEXT_PADDING = labelForFont.getFontMetrics(labelForFont.getFont()).getHeight();
+        
+        //Determine if Windows or not
         String osName = System.getProperty("os.name");
         if (osName.toLowerCase().contains("windows")) GlobalGUI.OS_IS_WINDOWS = true;
         else GlobalGUI.OS_IS_WINDOWS = false;
+        
+        //Load icon
+        ClassLoader cl = this.getClass().getClassLoader();
+        icon = new ImageIcon(cl.getResource("resources/icon.png"));
+        setIconImage(icon.getImage());
     }
 
     /**
@@ -67,6 +78,7 @@ public class DiskRover extends javax.swing.JFrame {
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Disk Rover");
+        setIconImage(getIconImage());
         setPreferredSize(new java.awt.Dimension(1000, 650));
         setSize(new java.awt.Dimension(700, 500));
         getContentPane().setLayout(new java.awt.GridBagLayout());
@@ -473,15 +485,16 @@ public class DiskRover extends javax.swing.JFrame {
 
     private void aboutButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_aboutButtonActionPerformed
         //Display a popup dialog with About info
-        String aboutInfo = 
-            "Disk Rover\n\n" +
-            "Author: Kristofer Christakos\n" +
-            "First created: Jan 2017\n\n" +
-            "For free use only.";
+        Object[] aboutInfo = {
+            "Disk Rover\n\n",
+            "Author: Kristofer Christakos\n",
+            "First created: Jan 2017\n\n",
+            "For free use only."};
         JOptionPane.showMessageDialog(this,
             aboutInfo,
             "About Disk Rover",
-            JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.INFORMATION_MESSAGE,
+            new ImageIcon(icon.getImage().getScaledInstance(100, 100, 0)));
     }//GEN-LAST:event_aboutButtonActionPerformed
     
     private void calculateRectangles(final List<FileRecord> group, 
