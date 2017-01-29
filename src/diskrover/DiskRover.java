@@ -52,36 +52,42 @@ public class DiskRover extends javax.swing.JFrame {
         java.awt.GridBagConstraints gridBagConstraints;
 
         buttonsPanel = new javax.swing.JPanel();
+        functionalityButtonsPanel = new javax.swing.JPanel();
         selectDriveButton = new javax.swing.JButton();
         reloadButton = new javax.swing.JButton();
         showFreeSpaceButton = new javax.swing.JToggleButton();
         zoomFullButton = new javax.swing.JButton();
         zoomOutButton = new javax.swing.JButton();
+        aboutButtonPanel = new javax.swing.JPanel();
+        aboutButton = new javax.swing.JButton();
         labelsPanel = new javax.swing.JPanel();
         hoverPathLabel = new javax.swing.JLabel();
         hoverSizeLabel = new javax.swing.JLabel();
         layeredPane = new javax.swing.JLayeredPane();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("DiskRover");
+        setTitle("Disk Rover");
         setPreferredSize(new java.awt.Dimension(1000, 650));
         setSize(new java.awt.Dimension(700, 500));
         getContentPane().setLayout(new java.awt.GridBagLayout());
 
-        buttonsPanel.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT));
+        buttonsPanel.setLayout(new javax.swing.BoxLayout(buttonsPanel, javax.swing.BoxLayout.LINE_AXIS));
+
+        functionalityButtonsPanel.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT));
 
         selectDriveButton.setText("Select Drive");
+        selectDriveButton.setToolTipText("Select which files and directories to map.");
         selectDriveButton.setFocusable(false);
         selectDriveButton.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        selectDriveButton.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
         selectDriveButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 selectDriveButtonActionPerformed(evt);
             }
         });
-        buttonsPanel.add(selectDriveButton);
+        functionalityButtonsPanel.add(selectDriveButton);
 
         reloadButton.setText("Reload");
+        reloadButton.setToolTipText("Remap the entire drive.");
         reloadButton.setEnabled(false);
         reloadButton.setFocusable(false);
         reloadButton.addActionListener(new java.awt.event.ActionListener() {
@@ -89,19 +95,21 @@ public class DiskRover extends javax.swing.JFrame {
                 reloadButtonActionPerformed(evt);
             }
         });
-        buttonsPanel.add(reloadButton);
+        functionalityButtonsPanel.add(reloadButton);
 
         showFreeSpaceButton.setSelected(true);
         showFreeSpaceButton.setText("Toggle Free Space");
+        showFreeSpaceButton.setToolTipText("Show or hide drive free space in the map.");
         showFreeSpaceButton.setFocusable(false);
         showFreeSpaceButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 showFreeSpaceButtonActionPerformed(evt);
             }
         });
-        buttonsPanel.add(showFreeSpaceButton);
+        functionalityButtonsPanel.add(showFreeSpaceButton);
 
         zoomFullButton.setText("Zoom Out Fully");
+        zoomFullButton.setToolTipText("Return to drive root.");
         zoomFullButton.setEnabled(false);
         zoomFullButton.setFocusable(false);
         zoomFullButton.addActionListener(new java.awt.event.ActionListener() {
@@ -109,9 +117,10 @@ public class DiskRover extends javax.swing.JFrame {
                 zoomFullButtonActionPerformed(evt);
             }
         });
-        buttonsPanel.add(zoomFullButton);
+        functionalityButtonsPanel.add(zoomFullButton);
 
         zoomOutButton.setText("Zoom Out");
+        zoomOutButton.setToolTipText("Return to the parent directory.");
         zoomOutButton.setEnabled(false);
         zoomOutButton.setFocusable(false);
         zoomOutButton.addActionListener(new java.awt.event.ActionListener() {
@@ -119,7 +128,25 @@ public class DiskRover extends javax.swing.JFrame {
                 zoomOutButtonActionPerformed(evt);
             }
         });
-        buttonsPanel.add(zoomOutButton);
+        functionalityButtonsPanel.add(zoomOutButton);
+
+        buttonsPanel.add(functionalityButtonsPanel);
+
+        aboutButtonPanel.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.RIGHT));
+
+        aboutButton.setText("About");
+        aboutButton.setToolTipText("About Disk Rover");
+        aboutButton.setFocusable(false);
+        aboutButton.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
+        aboutButton.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
+        aboutButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                aboutButtonActionPerformed(evt);
+            }
+        });
+        aboutButtonPanel.add(aboutButton);
+
+        buttonsPanel.add(aboutButtonPanel);
 
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
@@ -134,6 +161,7 @@ public class DiskRover extends javax.swing.JFrame {
         hoverPathLabel.setFocusable(false);
 
         hoverSizeLabel.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
+        hoverSizeLabel.setFocusable(false);
         hoverSizeLabel.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
 
         javax.swing.GroupLayout labelsPanelLayout = new javax.swing.GroupLayout(labelsPanel);
@@ -143,7 +171,7 @@ public class DiskRover extends javax.swing.JFrame {
             .addGroup(labelsPanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(hoverPathLabel)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 469, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 481, Short.MAX_VALUE)
                 .addComponent(hoverSizeLabel)
                 .addContainerGap())
         );
@@ -174,7 +202,7 @@ public class DiskRover extends javax.swing.JFrame {
         layeredPane.setLayout(layeredPaneLayout);
         layeredPaneLayout.setHorizontalGroup(
             layeredPaneLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 558, Short.MAX_VALUE)
+            .addGap(0, 570, Short.MAX_VALUE)
         );
         layeredPaneLayout.setVerticalGroup(
             layeredPaneLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -200,9 +228,21 @@ public class DiskRover extends javax.swing.JFrame {
         if (GlobalGUI.OS_IS_WINDOWS) {
             //Get available drives
             File[] availableRoots = File.listRoots();
-            String[] rootNames = new String[availableRoots.length];
-            for (int n = 0; n < rootNames.length; ++n) {
-                rootNames[n] = availableRoots[n].getAbsolutePath();
+            java.util.Map<String,Object> menuItems = new java.util.HashMap<>();
+            String firstItemAdded = null;
+            for (int driveIndex = 0; driveIndex < availableRoots.length; ++driveIndex) {
+                //Check if empty CD drive before adding to the menu
+                if (availableRoots[driveIndex].getTotalSpace() != 0) {
+                    menuItems.put(availableRoots[driveIndex].getAbsolutePath(), availableRoots[driveIndex]);
+                    if (firstItemAdded == null) firstItemAdded = availableRoots[driveIndex].getAbsolutePath();
+                }
+            }
+            if (firstItemAdded == null) {
+                JOptionPane.showMessageDialog(this, 
+                    "Error: No valid drives found.",
+                    "Drive Error",
+                    JOptionPane.ERROR_MESSAGE);
+                return;
             }
             
             //Ask the user to select a drive
@@ -211,32 +251,9 @@ public class DiskRover extends javax.swing.JFrame {
                     "Select Drive",                 //title
                     JOptionPane.PLAIN_MESSAGE,
                     null,                           //icon
-                    rootNames,                      //selection values
-                    rootNames[0]);                  //initial selection value
+                    menuItems.keySet().toArray(),   //selection values, used to be rootNames, rootNames[0]
+                    firstItemAdded);                 //initial selection value
             System.out.println("Drive selected: " + selectedDrive);
-            
-            //Check if drive isn't a CD drive
-            if (selectedDrive != null) {
-                int driveIndex = -1;
-                for (int n = 0; n < rootNames.length; ++n) {
-                    if (rootNames[n].equals(selectedDrive)) {
-                        driveIndex = n;
-                        break;
-                    }
-                }
-                if (driveIndex == -1) {
-                    System.out.println("Strange drive naming error. This should never happen.");
-                    return;
-                }
-                if (availableRoots[driveIndex].getTotalSpace() == 0) {
-                    //Must have selected a CD drive
-                    JOptionPane.showMessageDialog(this, 
-                            "Error: Drive has 0 space. Select another drive.",
-                            "Drive Space Error",
-                            JOptionPane.ERROR_MESSAGE);
-                    return;
-                }
-            }
             
             //Enable and press the reload button
             if (selectedDrive != null) {
@@ -247,20 +264,27 @@ public class DiskRover extends javax.swing.JFrame {
         } else {
             //Get available Linux FileStores
             Iterable<FileStore> availableFileStores = java.nio.file.FileSystems.getDefault().getFileStores();
-            List<String> storeNames = new ArrayList();
-            List<FileStore> stores = new ArrayList();
+            java.util.Map<String,Object> menuItems = new java.util.HashMap<>();
+            String firstItemAdded = null;
             for (FileStore store : availableFileStores) {
                 try {
                     long totalSpace = store.getTotalSpace();
                     long usedSpace = (store.getTotalSpace() - store.getUnallocatedSpace());
                     if ((totalSpace != 0) && (usedSpace != 0)) {
-                        storeNames.add(store.toString());
-                        stores.add(store);
+                        menuItems.put(store.toString(), store);
+                        if (firstItemAdded == null) firstItemAdded = store.toString();
                     }
                 } catch (java.io.IOException e) {
                     System.out.println("IOException while iterating available FileStores.");
                     return;
                 }
+            }
+            if (firstItemAdded == null) {
+                JOptionPane.showMessageDialog(this, 
+                    "Error: No valid mount found.",
+                    "FileStore Error",
+                    JOptionPane.ERROR_MESSAGE);
+                return;
             }
             
             //Ask the user to select a drive
@@ -269,31 +293,28 @@ public class DiskRover extends javax.swing.JFrame {
                     "Select Drive",                 //title
                     JOptionPane.PLAIN_MESSAGE,
                     null,                           //icon
-                    storeNames.toArray(),                      //selection values
-                    storeNames.get(0));                  //initial selection value
+                    menuItems.keySet().toArray(),   //selection values
+                    firstItemAdded);                //initial selection value
             System.out.println("Drive selected: " + selectedDrive);
             
             //Enable and press the reload button
             if (selectedDrive != null) {
-                for (FileStore store : stores) {
-                    if (store.toString().equals(selectedDrive)) {
-                        //Found the selection, now parse out the path to look through
-                        //ex: "/mount/path DRIVENAME"
-                        System.out.println(store.toString() + "," + store.name() + "|");
-                        String storePath = store.toString().trim();
-                        String storeName = store.name();
-                        int nameIndex = storePath.lastIndexOf(storeName);
-                        if (nameIndex == storePath.length()) nameIndex = -1;
-                        if (nameIndex > 1) {
-                            storePath = storePath.substring(0, nameIndex -1).trim();
-                        }
-
-                        RecordCounter.drivePath = storePath;
-                        RecordCounter.selectedFileStore = store;
-                        System.out.println("RecordCounter drivePath,fileStore: " + storePath + "," + store);
-                        break;
-                    }
+                FileStore store = (FileStore) menuItems.get(selectedDrive);
+                //Found the selection, now parse out the path to look through
+                //ex: "/mount/path DRIVENAME"
+                String storePath = store.toString().trim();
+                String storeName = store.name();
+                System.out.println(storePath + "," + storeName + "|");
+                int nameIndex = storePath.lastIndexOf(storeName);
+                if (nameIndex == storePath.length()) nameIndex = -1;
+                if (nameIndex > 1) {
+                    storePath = storePath.substring(0, nameIndex -1).trim();
                 }
+                
+                RecordCounter.drivePath = storePath;
+                RecordCounter.selectedFileStore = store;
+                System.out.println("RecordCounter (drivePath,fileStore): (" + 
+                        storePath + "," + store.toString() + ")");
                 if (RecordCounter.drivePath == null) {
                     System.out.println("drivePath is null. Serious error.");
                     return;
@@ -415,6 +436,7 @@ public class DiskRover extends javax.swing.JFrame {
         parentZoomStack.push(RecordCounter.drive.root);
         currentZoomLabels = new HashMap();
         zoomOutButton.setEnabled(false);
+        zoomFullButton.setEnabled(false);
         calculateRectangles(parentZoomStack.peek().children, 0, 0,
                 layeredPane.getWidth(), layeredPane.getHeight(), 0);
     }//GEN-LAST:event_zoomFullButtonActionPerformed
@@ -429,6 +451,7 @@ public class DiskRover extends javax.swing.JFrame {
         currentZoomLabels = new HashMap();
         if (parentZoomStack.peek() == RecordCounter.drive.root) {
             zoomOutButton.setEnabled(false);
+            zoomFullButton.setEnabled(false);
         }
         calculateRectangles(parentZoomStack.peek().children, 0, 0,
                 layeredPane.getWidth(), layeredPane.getHeight(), 0);
@@ -443,9 +466,23 @@ public class DiskRover extends javax.swing.JFrame {
                 RecordCounter.drive.removeFreeSpaceRecord();
             }
             //Recalculate the rectangles and display
+            zoomFullButton.setEnabled(true);
             zoomFullButton.doClick();
         }
     }//GEN-LAST:event_showFreeSpaceButtonActionPerformed
+
+    private void aboutButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_aboutButtonActionPerformed
+        //Display a popup dialog with About info
+        String aboutInfo = 
+            "Disk Rover\n\n" +
+            "Author: Kristofer Christakos\n" +
+            "First created: Jan 2017\n\n" +
+            "For free use only.";
+        JOptionPane.showMessageDialog(this,
+            aboutInfo,
+            "About Disk Rover",
+            JOptionPane.INFORMATION_MESSAGE);
+    }//GEN-LAST:event_aboutButtonActionPerformed
     
     private void calculateRectangles(final List<FileRecord> group, 
             final int x, final int y, 
@@ -513,9 +550,10 @@ public class DiskRover extends javax.swing.JFrame {
                         if (rectangle.file.children != null) {
                             if (rectangle.file == RecordCounter.drive.root) {
                                 parentZoomStack.clear();
-                                zoomOutButton.setEnabled(false);
+                                //zoomOutButton.setEnabled(false);
                             } else {
                                 zoomOutButton.setEnabled(true);
+                                zoomFullButton.setEnabled(true);
                             }
                             parentZoomStack.push(rectangle.file);
                             currentZoomLabels = new HashMap();
@@ -691,7 +729,10 @@ public class DiskRover extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton aboutButton;
+    private javax.swing.JPanel aboutButtonPanel;
     private javax.swing.JPanel buttonsPanel;
+    private javax.swing.JPanel functionalityButtonsPanel;
     private javax.swing.JLabel hoverPathLabel;
     private javax.swing.JLabel hoverSizeLabel;
     private javax.swing.JPanel labelsPanel;
