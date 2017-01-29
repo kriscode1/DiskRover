@@ -28,6 +28,9 @@ public class DriveRecord {
         return root.getSize();
     }
     public void insertFreeSpaceRecord() {
+        if (root.children == null) {
+            root.children = new java.util.ArrayList();
+        }
         root.children.add(freeSpaceRecord);
         root.addFreeSpaceToSize(freeSpaceRecord.getSize());
     }

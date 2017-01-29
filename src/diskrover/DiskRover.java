@@ -9,6 +9,7 @@ import javax.swing.JButton;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.io.File;
+import java.nio.file.FileStore;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
@@ -35,6 +36,9 @@ public class DiskRover extends javax.swing.JFrame {
         initComponents();
         JLabel labelForFont = new JLabel("test");
         RECTANGLE_TEXT_PADDING = labelForFont.getFontMetrics(labelForFont.getFont()).getHeight();
+        String osName = System.getProperty("os.name");
+        if (osName.toLowerCase().contains("windows")) GlobalGUI.OS_IS_WINDOWS = true;
+        else GlobalGUI.OS_IS_WINDOWS = false;
     }
 
     /**
@@ -190,51 +194,113 @@ public class DiskRover extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void selectDriveButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_selectDriveButtonActionPerformed
-        //Get available drives
-        File[] availableRoots = File.listRoots();
-        String[] rootNames = new String[availableRoots.length];
-        for (int n = 0; n < rootNames.length; ++n) {
-            rootNames[n] = availableRoots[n].getAbsolutePath();
-        }
-        
-        //Ask the user to select a drive
-        String selectedDrive = (String)JOptionPane.showInputDialog(this, 
-                "Select the drive to scan:",    //message
-                "Select Drive",                 //title
-                JOptionPane.PLAIN_MESSAGE,
-                null,                           //icon
-                rootNames,                      //selection values
-                rootNames[0]);                  //initial selection value
-        System.out.println("Drive selected: " + selectedDrive);
-        
-        //Check if drive isn't a CD drive
-        if (selectedDrive != null) {
-            int driveIndex = -1;
+        //Handle Windows drives and UNIX paths differently
+        //Linux treats everything as a file, so the filesystem scan needs to 
+        //be more selective.
+        if (GlobalGUI.OS_IS_WINDOWS) {
+            //Get available drives
+            File[] availableRoots = File.listRoots();
+            String[] rootNames = new String[availableRoots.length];
             for (int n = 0; n < rootNames.length; ++n) {
-                if (rootNames[n].equals(selectedDrive)) {
-                    driveIndex = n;
-                    break;
+                rootNames[n] = availableRoots[n].getAbsolutePath();
+            }
+            
+            //Ask the user to select a drive
+            String selectedDrive = (String)JOptionPane.showInputDialog(this, 
+                    "Select the drive to scan:",    //message
+                    "Select Drive",                 //title
+                    JOptionPane.PLAIN_MESSAGE,
+                    null,                           //icon
+                    rootNames,                      //selection values
+                    rootNames[0]);                  //initial selection value
+            System.out.println("Drive selected: " + selectedDrive);
+            
+            //Check if drive isn't a CD drive
+            if (selectedDrive != null) {
+                int driveIndex = -1;
+                for (int n = 0; n < rootNames.length; ++n) {
+                    if (rootNames[n].equals(selectedDrive)) {
+                        driveIndex = n;
+                        break;
+                    }
+                }
+                if (driveIndex == -1) {
+                    System.out.println("Strange drive naming error. This should never happen.");
+                    return;
+                }
+                if (availableRoots[driveIndex].getTotalSpace() == 0) {
+                    //Must have selected a CD drive
+                    JOptionPane.showMessageDialog(this, 
+                            "Error: Drive has 0 space. Select another drive.",
+                            "Drive Space Error",
+                            JOptionPane.ERROR_MESSAGE);
+                    return;
                 }
             }
-            if (driveIndex == -1) {
-                System.out.println("Strange drive naming error. This should never happen.");
-                return;
+            
+            //Enable and press the reload button
+            if (selectedDrive != null) {
+                RecordCounter.drivePath = selectedDrive;
+                reloadButton.setEnabled(true);
+                reloadButton.doClick();
             }
-            if (availableRoots[driveIndex].getTotalSpace() == 0) {
-                //Must have selected a CD drive
-                JOptionPane.showMessageDialog(this, 
-                        "Error: Drive has 0 space. Select another drive.",
-                        "Drive Space Error",
-                        JOptionPane.ERROR_MESSAGE);
-                return;
+        } else {
+            //Get available Linux FileStores
+            Iterable<FileStore> availableFileStores = java.nio.file.FileSystems.getDefault().getFileStores();
+            List<String> storeNames = new ArrayList();
+            List<FileStore> stores = new ArrayList();
+            for (FileStore store : availableFileStores) {
+                try {
+                    long totalSpace = store.getTotalSpace();
+                    long usedSpace = (store.getTotalSpace() - store.getUnallocatedSpace());
+                    if ((totalSpace != 0) && (usedSpace != 0)) {
+                        storeNames.add(store.toString());
+                        stores.add(store);
+                    }
+                } catch (java.io.IOException e) {
+                    System.out.println("IOException while iterating available FileStores.");
+                    return;
+                }
             }
-        }
-        
-        //enable and press the reload button
-        if (selectedDrive != null) {
-            RecordCounter.drivePath = selectedDrive;
-            reloadButton.setEnabled(true);
-            reloadButton.doClick();
+            
+            //Ask the user to select a drive
+            String selectedDrive = (String)JOptionPane.showInputDialog(this, 
+                    "Select the drive to scan:",    //message
+                    "Select Drive",                 //title
+                    JOptionPane.PLAIN_MESSAGE,
+                    null,                           //icon
+                    storeNames.toArray(),                      //selection values
+                    storeNames.get(0));                  //initial selection value
+            System.out.println("Drive selected: " + selectedDrive);
+            
+            //Enable and press the reload button
+            if (selectedDrive != null) {
+                for (FileStore store : stores) {
+                    if (store.toString().equals(selectedDrive)) {
+                        //Found the selection, now parse out the path to look through
+                        //ex: "/mount/path DRIVENAME"
+                        System.out.println(store.toString() + "," + store.name() + "|");
+                        String storePath = store.toString().trim();
+                        String storeName = store.name();
+                        int nameIndex = storePath.lastIndexOf(storeName);
+                        if (nameIndex == storePath.length()) nameIndex = -1;
+                        if (nameIndex > 1) {
+                            storePath = storePath.substring(0, nameIndex -1).trim();
+                        }
+
+                        RecordCounter.drivePath = storePath;
+                        RecordCounter.selectedFileStore = store;
+                        System.out.println("RecordCounter drivePath,fileStore: " + storePath + "," + store);
+                        break;
+                    }
+                }
+                if (RecordCounter.drivePath == null) {
+                    System.out.println("drivePath is null. Serious error.");
+                    return;
+                }
+                reloadButton.setEnabled(true);
+                reloadButton.doClick();
+            }
         }
     }//GEN-LAST:event_selectDriveButtonActionPerformed
 
@@ -311,6 +377,14 @@ public class DiskRover extends javax.swing.JFrame {
             //User must have pressed cancel, to close the dialog box
             FileRecord.stopWork = true;
             mappingDriveTask.cancel(true);
+            return;
+        }
+        if (RecordCounter.drive.root.children == null) {
+            //Drive with no children, don't attempt to show.
+            JOptionPane.showMessageDialog(this, 
+                        "Error: Drive does not contain files for display. Select another drive.",
+                        "Drive Contents Error",
+                        JOptionPane.ERROR_MESSAGE);
             return;
         }
         

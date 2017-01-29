@@ -10,4 +10,5 @@ package diskrover;
  */
 public class GlobalGUI {
     public static volatile javax.swing.JButton cancelButton;
+    public static volatile boolean OS_IS_WINDOWS;
 }

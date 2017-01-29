@@ -25,6 +25,7 @@ public class RecordCounter extends javax.swing.SwingWorker<DriveRecord,String> {
     }
     
     public static String drivePath;
+    public static java.nio.file.FileStore selectedFileStore;
     public static volatile long sizeCounted;    // |Summed as records are read
     public static volatile long fileCount;      // |
     public static volatile long folderCount;    // |
@@ -46,6 +47,7 @@ public class RecordCounter extends javax.swing.SwingWorker<DriveRecord,String> {
             if (impliedUsedSpace != 0) {
                 double progress = (double) RecordCounter.sizeCounted / impliedUsedSpace;
                 progress *= 100.0;
+                //System.out.println("progress " + progress);
                 if (progress <= 100) {
                     setProgress((int)progress);
                 } else {
