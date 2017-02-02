@@ -1,7 +1,7 @@
 # DiskRover
 Scans a storage drive and builds an interactive map of files by file size.
 
-Visually see which folders and files are taking up the most space in your filesystem. Tested on Windows 7, Windows 8.1, CentOS, and macOS Sierra. 
+Visually see which folders and files are taking up the most space in your filesystem. Tested on Windows 7, Windows 8.1, Windows 10, CentOS, and macOS Sierra. 
 
 Download link: 
 https://github.com/kriscode1/DiskRover/blob/master/dist/DiskRover.jar
