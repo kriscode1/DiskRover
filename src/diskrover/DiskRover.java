@@ -1,4 +1,6 @@
-/* DiskRover, Kristofer Christakos, Jan 2017
+/* Disk Rover v1.1, Kristofer Christakos
+ * First created: Jan 2017
+ * This update: April 2017
  * Scans a storage drive and builds an interactive map of files by file size.
  */
 package diskrover;
@@ -10,12 +12,15 @@ import javax.swing.ImageIcon;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.FileStore;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
 import java.util.Map;
 import java.util.HashMap;
+import javax.swing.JFileChooser;
 
 /**
  *
@@ -43,8 +48,7 @@ public class DiskRover extends javax.swing.JFrame {
         
         //Determine if Windows or not
         String osName = System.getProperty("os.name");
-        if (osName.toLowerCase().contains("windows")) GlobalGUI.OS_IS_WINDOWS = true;
-        else GlobalGUI.OS_IS_WINDOWS = false;
+        GlobalGUI.OS_IS_WINDOWS = osName.toLowerCase().contains("windows");
         
         //Load icon
         ClassLoader cl = this.getClass().getClassLoader();
@@ -237,47 +241,23 @@ public class DiskRover extends javax.swing.JFrame {
         //Handle Windows drives and UNIX paths differently
         //Linux treats everything as a file, so the filesystem scan needs to 
         //be more selective.
+        java.util.Map<String,Object> menuItems = new java.util.HashMap<>();
+        String firstItemAdded = null;
+        boolean folderSelected = false;
+        
         if (GlobalGUI.OS_IS_WINDOWS) {
             //Get available drives
             File[] availableRoots = File.listRoots();
-            java.util.Map<String,Object> menuItems = new java.util.HashMap<>();
-            String firstItemAdded = null;
             for (int driveIndex = 0; driveIndex < availableRoots.length; ++driveIndex) {
                 //Check if empty CD drive before adding to the menu
                 if (availableRoots[driveIndex].getTotalSpace() != 0) {
-                    menuItems.put(availableRoots[driveIndex].getAbsolutePath(), availableRoots[driveIndex]);
+                    menuItems.put(availableRoots[driveIndex].getAbsolutePath(), null);
                     if (firstItemAdded == null) firstItemAdded = availableRoots[driveIndex].getAbsolutePath();
                 }
-            }
-            if (firstItemAdded == null) {
-                JOptionPane.showMessageDialog(this, 
-                    "Error: No valid drives found.",
-                    "Drive Error",
-                    JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-            
-            //Ask the user to select a drive
-            String selectedDrive = (String)JOptionPane.showInputDialog(this, 
-                    "Select the drive to scan:",    //message
-                    "Select Drive",                 //title
-                    JOptionPane.PLAIN_MESSAGE,
-                    null,                           //icon
-                    menuItems.keySet().toArray(),   //selection values, used to be rootNames, rootNames[0]
-                    firstItemAdded);                 //initial selection value
-            System.out.println("Drive selected: " + selectedDrive);
-            
-            //Enable and press the reload button
-            if (selectedDrive != null) {
-                RecordCounter.drivePath = selectedDrive;
-                reloadButton.setEnabled(true);
-                reloadButton.doClick();
             }
         } else {
             //Get available Linux FileStores
             Iterable<FileStore> availableFileStores = java.nio.file.FileSystems.getDefault().getFileStores();
-            java.util.Map<String,Object> menuItems = new java.util.HashMap<>();
-            String firstItemAdded = null;
             for (FileStore store : availableFileStores) {
                 try {
                     long totalSpace = store.getTotalSpace();
@@ -291,30 +271,57 @@ public class DiskRover extends javax.swing.JFrame {
                     return;
                 }
             }
-            if (firstItemAdded == null) {
-                JOptionPane.showMessageDialog(this, 
-                    "Error: No valid mount found.",
-                    "FileStore Error",
-                    JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-            
-            //Ask the user to select a drive
-            String selectedDrive = (String)JOptionPane.showInputDialog(this, 
-                    "Select the drive to scan:",    //message
-                    "Select Drive",                 //title
-                    JOptionPane.PLAIN_MESSAGE,
-                    null,                           //icon
-                    menuItems.keySet().toArray(),   //selection values
-                    firstItemAdded);                //initial selection value
-            System.out.println("Drive selected: " + selectedDrive);
-            
-            //Enable and press the reload button
-            if (selectedDrive != null) {
-                FileStore store = (FileStore) menuItems.get(selectedDrive);
+        }
+        
+        if (firstItemAdded == null) {
+            JOptionPane.showMessageDialog(this, 
+                "Error: No valid drives found.",
+                "Drive Error",
+                JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        
+        //Also add an option to choose a directory to scan
+        final String scanFolderText = "Scan a folder...";
+        menuItems.put(scanFolderText, null);
+
+        //Ask the user to select a drive
+        String selectedDrive = (String)JOptionPane.showInputDialog(this, 
+                "Select the drive to scan:",    //message
+                "Select Drive",                 //title
+                JOptionPane.PLAIN_MESSAGE,
+                null,                           //icon
+                menuItems.keySet().toArray(),   //selection values, used to be rootNames, rootNames[0]
+                firstItemAdded);                 //initial selection value
+        System.out.println("Drive selected: " + selectedDrive);
+        if (selectedDrive == null) return;//User pressed Cancel or the X
+        
+        //If they chose "Scan a folder..." then prompt for the folder
+        if (selectedDrive.equals(scanFolderText)) {
+            folderSelected = true;
+            JFileChooser chooser = new JFileChooser();
+            chooser.setDragEnabled(false);
+            chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+            chooser.setAcceptAllFileFilterUsed(false);
+            chooser.setDialogTitle("Select Folder");
+            int folderSelection = chooser.showOpenDialog(this);
+            if (folderSelection == JFileChooser.APPROVE_OPTION) {
+                selectedDrive = chooser.getSelectedFile().getAbsolutePath();
+            } else return;//User cancelled or an error
+        }
+        
+        if (selectedDrive == null) return;
+        
+        //Enable and press the reload button
+        if (GlobalGUI.OS_IS_WINDOWS) {
+            RecordCounter.drivePath = selectedDrive;
+        } else {
+            FileStore store = (FileStore) menuItems.get(selectedDrive);
+            String storePath;
+            if (store != null) {
                 //Found the selection, now parse out the path to look through
                 //ex: "/mount/path DRIVENAME"
-                String storePath = store.toString().trim();
+                storePath = store.toString().trim();
                 String storeName = store.name();
                 System.out.println(storePath + "," + storeName + "|");
                 int nameIndex = storePath.lastIndexOf(storeName);
@@ -322,19 +329,35 @@ public class DiskRover extends javax.swing.JFrame {
                 if (nameIndex > 1) {
                     storePath = storePath.substring(0, nameIndex -1).trim();
                 }
-                
-                RecordCounter.drivePath = storePath;
-                RecordCounter.selectedFileStore = store;
-                System.out.println("RecordCounter (drivePath,fileStore): (" + 
-                        storePath + "," + store.toString() + ")");
-                if (RecordCounter.drivePath == null) {
-                    System.out.println("drivePath is null. Serious error.");
+            } else {
+                //Must have been folder selection
+                //Need to get the FileStore object since it wasn't retrieved earlier
+                try {
+                    store = Files.getFileStore((new File(selectedDrive)).toPath());
+                } catch (IOException ex) {
+                    System.out.println("Files.getFileStore() error for \"" + selectedDrive + "\"");
                     return;
                 }
-                reloadButton.setEnabled(true);
-                reloadButton.doClick();
+                storePath = selectedDrive;
+            }
+            
+            RecordCounter.drivePath = storePath;
+            RecordCounter.selectedFileStore = store;
+            System.out.println("RecordCounter (drivePath,fileStore): (" + 
+                    storePath + "," + store.toString() + ")");
+            if (RecordCounter.drivePath == null) {
+                System.out.println("drivePath is null. Serious error.");
+                return;
             }
         }
+        if (folderSelected) {
+            showFreeSpaceButton.setSelected(false);
+            showFreeSpaceButton.setEnabled(false);
+        } else {
+            showFreeSpaceButton.setEnabled(true);
+        }
+        reloadButton.setEnabled(true);
+        reloadButton.doClick();
     }//GEN-LAST:event_selectDriveButtonActionPerformed
 
     private void reloadButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_reloadButtonActionPerformed
@@ -486,7 +509,7 @@ public class DiskRover extends javax.swing.JFrame {
     private void aboutButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_aboutButtonActionPerformed
         //Display a popup dialog with About info
         Object[] aboutInfo = {
-            "Disk Rover\n\n",
+            "Disk Rover v1.1\n\n",
             "Author: Kristofer Christakos\n",
             "First created: Jan 2017\n\n",
             "For free use only."};

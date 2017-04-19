@@ -2,6 +2,5 @@ build.xml
 manifest.mf
 iconLayers.pdn
 dist/README.TXT
-build/*
-nbproject/*
-test/*
+build
+nbproject
