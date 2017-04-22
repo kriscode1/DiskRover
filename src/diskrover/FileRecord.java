@@ -1,6 +1,6 @@
 /*
  * FileRecord manages the details of a file/directory. 
-Each record keeps track of its children, forming a large tree. 
+ * Each record keeps track of its children, forming a large tree. 
  */
 package diskrover;
 
@@ -125,5 +125,35 @@ public class FileRecord implements Comparable<FileRecord> {
             return this.name.compareToIgnoreCase(other.name);
         }
         return sizeDifference;
+    }
+    
+    public boolean delete() {
+        //Attempts to delete the file or folder and returns true if successful.
+        
+        if (!exists()) return true;//Already deleted
+        
+        //Delete children if non-empty directory
+        boolean allChildrenDeleted = true;
+        if (children != null) {
+            for (FileRecord child : children) {
+                if(child.delete() == false) allChildrenDeleted = false;
+            }
+        }
+        if (allChildrenDeleted == false) return false;
+        
+        //Delete now that there are no children
+        boolean thisFileDeleted;
+        try {
+            File fileObject = new File(path);
+            thisFileDeleted = fileObject.delete();
+        } catch (SecurityException e) {
+            thisFileDeleted = false;
+        }
+        return thisFileDeleted;
+    }
+    
+    public boolean exists() {
+        File fileInfo = new File(path);
+        return fileInfo.exists();
     }
 }

@@ -16,46 +16,94 @@ import javax.swing.border.Border;
 public class LayeredPaneRectangle {
     JLabel label;
     FileRecord file;
-    private final Border blackBorder = BorderFactory.createLineBorder(Color.black, 1);
-    private final Border whiteBorder = BorderFactory.createLineBorder(Color.white, 1);
+    private final Border blackBorder = BorderFactory.createLineBorder(Color.BLACK, 1);
+    private final Border whiteBorder = BorderFactory.createLineBorder(Color.WHITE, 1);
+    private final Border orangeBorder = BorderFactory.createLineBorder(Color.ORANGE, 1);
     private static final int BRIGHT_MODIFIER = 70;
+    private boolean fileMarkedDeleted = false;
     
-    public LayeredPaneRectangle(final FileRecord file, String text, int layer, int x, int y, int width, int height) {
+    public LayeredPaneRectangle(final FileRecord file, String text, int layer, int x, int y, int width, int height, RefreshCallback refreshCallback) {
         this.file = file;
+        checkIfFileIsDeleted();
+        
         label = new JLabel(text);
         label.setVerticalAlignment(JLabel.TOP);
         label.setHorizontalAlignment(JLabel.LEFT);
         label.setOpaque(true);
-        setBackgroundToDarkColor(layer);
-        label.setForeground(Color.black);
-        setBorderBlack();
         label.setBounds(x, y, width, height);
+        label.setComponentPopupMenu(new RightClickMenu(this.file, fileMarkedDeleted, refreshCallback));
+        
+        //Coloring, changes if file/folder is deleted
+        if (fileMarkedDeleted) {
+            setFileDeletedColoring();
+        } else {
+            setBackgroundToDarkColor(layer);
+            label.setForeground(Color.BLACK);
+            setBorderBlack();
+        }
     }
-    public void setBorderBlack() {
-        label.setBorder(blackBorder);
-    }
-    public void setBorderWhite() {
-        label.setBorder(whiteBorder);
-    }
-    public void setBackgroundToDarkColor(int layer) {
-        label.setBackground(getDarkColorForLayer(layer));
-    }
-    public void setBackgroundToLightColor(int layer) {
-        label.setBackground(getLightColorForLayer(layer));
-    }
-    public void setBackgroundToDarkGray() {
-        label.setBackground(new Color(convertRGBToInt(128, 128, 128)));
-    }
-    public void setBackgroundToLightGray() {
-        label.setBackground(new Color(convertRGBToInt(128+BRIGHT_MODIFIER, 
-                                                      128+BRIGHT_MODIFIER, 
-                                                      128+BRIGHT_MODIFIER)));
-    }
+    
     public void setTextAlignmentToCenter() {
         label.setVerticalAlignment(JLabel.CENTER);
         label.setHorizontalAlignment(JLabel.CENTER);
     }
     
+    public void setFileColoring(boolean mouseOver, int layer) {
+        //Sets label coloring for file/directory records.
+        
+        if (fileMarkedDeleted) {
+            setFileDeletedColoring();
+        } else {
+            label.setForeground(Color.BLACK);
+            if (mouseOver) {
+                setBackgroundToLightColor(layer);
+                setBorderWhite();
+            } else {
+                setBackgroundToDarkColor(layer);
+                setBorderBlack();
+            }
+        }
+    }
+    
+    public void setSpaceColoring(boolean mouseOver) {
+        //Sets label coloring for free space records.
+        
+        label.setForeground(Color.BLACK);
+        if (mouseOver) {
+            setBackgroundToLightGray();
+            setBorderWhite();
+        } else {
+            setBackgroundToDarkGray();
+            setBorderBlack();
+        }
+    }
+    
+    //////////// Private helper functions below ////////////
+    private void setFileDeletedColoring() {
+        label.setBackground(Color.BLACK);
+        label.setForeground(Color.RED);
+        label.setBorder(orangeBorder);
+    }
+    private void setBorderBlack() {
+        label.setBorder(blackBorder);
+    }
+    private void setBorderWhite() {
+        label.setBorder(whiteBorder);
+    }
+    private void setBackgroundToDarkColor(int layer) {
+        label.setBackground(getDarkColorForLayer(layer));
+    }
+    private void setBackgroundToLightColor(int layer) {
+        label.setBackground(getLightColorForLayer(layer));
+    }
+    private void setBackgroundToDarkGray() {
+        label.setBackground(new Color(convertRGBToInt(128, 128, 128)));
+    }
+    private void setBackgroundToLightGray() {
+        label.setBackground(new Color(convertRGBToInt(128+BRIGHT_MODIFIER, 
+                                                      128+BRIGHT_MODIFIER, 
+                                                      128+BRIGHT_MODIFIER)));
+    }
     private static int convertRGBToInt(int red, int green, int blue) {
         int rgb = red;
         rgb = (rgb << 8) + green;
@@ -88,5 +136,8 @@ public class LayeredPaneRectangle {
             case 5: return new Color(convertRGBToInt(128+BRIGHT_MODIFIER, 0+BRIGHT_MODIFIER, 255));//Color.MAGENTA;
             default: return Color.BLACK;
         }
+    }
+    private void checkIfFileIsDeleted() {
+        if (!fileMarkedDeleted) fileMarkedDeleted = !file.exists();
     }
 }

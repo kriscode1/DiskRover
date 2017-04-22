@@ -1,4 +1,4 @@
-/* Disk Rover v1.1, Kristofer Christakos
+/* Disk Rover v1.2, Kristofer Christakos
  * First created: Jan 2017
  * This update: April 2017
  * Scans a storage drive and builds an interactive map of files by file size.
@@ -11,6 +11,7 @@ import javax.swing.JButton;
 import javax.swing.ImageIcon;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
+import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileStore;
@@ -38,9 +39,11 @@ public class DiskRover extends javax.swing.JFrame {
     private Stack<FileRecord> parentZoomStack;//stores zoom order for zooming out
     private Map<String, String> currentZoomLabels;//stores text for better performance
     private final ImageIcon icon;
+    private RefreshCallback refreshCallback;
     
     public DiskRover() {
         initComponents();
+        refreshCallback = this::recalculateRectangles;
         
         //Calculate RECTANGLE_TEXT_PADDING
         JLabel labelForFont = new JLabel("test");
@@ -54,6 +57,10 @@ public class DiskRover extends javax.swing.JFrame {
         ClassLoader cl = this.getClass().getClassLoader();
         icon = new ImageIcon(cl.getResource("resources/icon.png"));
         setIconImage(icon.getImage());
+    }
+    
+    private void recalculateRectangles() {
+        layeredPaneComponentResized(null);
     }
 
     /**
@@ -551,14 +558,13 @@ public class DiskRover extends javax.swing.JFrame {
                 text = remainingRecord.name;
             }
             if ((innerWidth <= 0) || (innerHeight <= 0)) text = "";//Rectangle too small
-            LayeredPaneRectangle rectangle = new LayeredPaneRectangle(remainingRecord, text, layer, x, y, width, height);
+            LayeredPaneRectangle rectangle = new LayeredPaneRectangle(remainingRecord, text, layer, x, y, width, height, refreshCallback);
             if (rectangle.file.path.length() != 0) {
                 //Add specialized mouse events for complete FileRecords
                 rectangle.label.addMouseListener(new java.awt.event.MouseAdapter() {
                     @Override
                     public void mouseEntered(java.awt.event.MouseEvent evt) {
-                        rectangle.setBorderWhite();
-                        rectangle.setBackgroundToLightColor(layer);
+                        rectangle.setFileColoring(true, layer);
                         String hoverPathLabelText = rectangle.file.path;
                         hoverPathLabel.setText(hoverPathLabelText);
                         String hoverSizeLabelText;
@@ -578,15 +584,14 @@ public class DiskRover extends javax.swing.JFrame {
                     }
                     @Override
                     public void mouseExited(java.awt.event.MouseEvent evt) {
-                        rectangle.setBorderBlack();
-                        rectangle.setBackgroundToDarkColor(layer);
+                        rectangle.setFileColoring(false, layer);
                     }
                     @Override
                     public void mousePressed(java.awt.event.MouseEvent evt) {
+                        if (evt.getButton() != MouseEvent.BUTTON1) return;//Not a left click
                         if (rectangle.file.children != null) {
                             if (rectangle.file == RecordCounter.drive.root) {
                                 parentZoomStack.clear();
-                                //zoomOutButton.setEnabled(false);
                             } else {
                                 zoomOutButton.setEnabled(true);
                                 zoomFullButton.setEnabled(true);
@@ -606,13 +611,12 @@ public class DiskRover extends javax.swing.JFrame {
                 }
             } else {
                 //Add specialized handling of a free space record
-                rectangle.setBackgroundToDarkGray();
+                rectangle.setSpaceColoring(false);
                 rectangle.setTextAlignmentToCenter();
                 rectangle.label.addMouseListener(new java.awt.event.MouseAdapter() {
                     @Override
                     public void mouseEntered(java.awt.event.MouseEvent evt) {
-                        rectangle.setBorderWhite();
-                        rectangle.setBackgroundToLightGray();
+                        rectangle.setSpaceColoring(true);
                         String hoverPathLabelText = rectangle.file.name;
                         hoverPathLabel.setText(hoverPathLabelText);
                         String hoverSizeLabelText;
@@ -632,12 +636,8 @@ public class DiskRover extends javax.swing.JFrame {
                     }
                     @Override
                     public void mouseExited(java.awt.event.MouseEvent evt) {
-                        rectangle.setBorderBlack();
-                        rectangle.setBackgroundToDarkGray();
+                        rectangle.setSpaceColoring(false);
                     }
-                    /*public void mousePressed(java.awt.event.MouseEvent evt) {
-                        //Do nothing, but this here leaving for future use
-                    }*/
                 });
             }
             layeredPane.add(rectangle.label, new Integer(layer));
