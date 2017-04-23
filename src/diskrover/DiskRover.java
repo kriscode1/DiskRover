@@ -32,6 +32,7 @@ public class DiskRover extends javax.swing.JFrame {
     /**
      * Creates new form MainJFrame
      */
+    private final static String VERSION_NUMBER = "1.2";
     
     private List<LayeredPaneRectangle> layeredPaneRectangles;
     private final int RECTANGLE_TEXT_PADDING;
@@ -516,10 +517,11 @@ public class DiskRover extends javax.swing.JFrame {
     private void aboutButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_aboutButtonActionPerformed
         //Display a popup dialog with About info
         Object[] aboutInfo = {
-            "Disk Rover v1.1\n\n",
-            "Author: Kristofer Christakos\n",
+            "Disk Rover v" + VERSION_NUMBER + "\n\n",
+            "Author:   Kristofer Christakos\n",
+            "Email:    kriscode1project@gmail.com\n",
             "First created: Jan 2017\n\n",
-            "For free use only."};
+            "For free use only. Provided as is."};
         JOptionPane.showMessageDialog(this,
             aboutInfo,
             "About Disk Rover",
